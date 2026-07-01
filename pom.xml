@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.3</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -19,8 +19,12 @@
     <properties>
         <java.version>21</java.version>
         <jacoco.version>0.8.12</jacoco.version>
+        <!-- To FIX CVE-2026-13006, CWE-917, CVSS 7.0-->
+        <logback.version>1.5.36</logback.version>
         <mockito.version>5.17.0</mockito.version>
         <springdoc.version>2.8.9</springdoc.version>
+        <!-- To FIX CVE-2026-53434, CWE-390, CVSS 8.7-->
+        <tomcat.version>11.0.23</tomcat.version>
     </properties>
 
     <dependencies>
@@ -47,6 +51,11 @@
             <version>${springdoc.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
@@ -54,6 +63,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -120,6 +134,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

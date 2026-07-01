@@ -6,7 +6,7 @@
 
 **Architecture:** Add Springdoc WebMVC UI to generate `/v3/api-docs` and Swagger UI from runtime controller/model metadata. Annotate the controller, DTOs, and error responses with OAS 3 annotations so the generated specification is useful to reviewers.
 
-**Tech Stack:** Java 21, Spring Boot 3.5, Spring Web, Spring Validation, Springdoc OpenAPI, Maven, MockMvc.
+**Tech Stack:** Java 21, Spring Boot 4.1, Spring Web, Spring Validation, Springdoc OpenAPI, Maven, MockMvc.
 
 ---
 

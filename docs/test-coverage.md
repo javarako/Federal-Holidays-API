@@ -8,10 +8,10 @@ The minimum required coverage is 70% instruction coverage across the application
 
 The Maven build fails during `verify` if coverage falls below this threshold.
 
-The latest local verification reported 82.87% instruction coverage:
+The latest local verification reported 88.24% instruction coverage:
 
 ```text
-missed=197 covered=953 coverage=82.87%
+missed=136 covered=1020 coverage=88.24%
 ```
 
 ## How To Run

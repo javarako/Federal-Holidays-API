@@ -9,6 +9,13 @@ Supported countries are currently:
 
 The country handling is isolated in `CountryCode`, so adding a country is a small domain change instead of a controller rewrite.
 
+## Requirements
+
+- Java `21`
+- Spring Boot `4.1.0`
+- Maven
+- Docker and Docker Compose
+
 ## Run Locally
 
 Start PostgreSQL and the API:
