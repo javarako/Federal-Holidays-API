@@ -113,9 +113,13 @@ Errors are returned as `ApiError` JSON with:
 
 Status behavior:
 
-- `400 Bad Request`: unsupported country, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
-- `404 Not Found`: update target does not exist for the path country.
+- `200 OK`: successful list, update, or upload request.
+- `201 Created`: holiday created successfully.
+- `400 Bad Request`: invalid request data, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
+- `404 Not Found`: unsupported country code or update target does not exist for the path country.
 - `409 Conflict`: duplicate country/date/name holiday violates the database uniqueness rule.
+- `415 Unsupported Media Type`: upload file type is not supported.
+- `500 Internal Server Error`: unexpected server error.
 
 ## Local Runtime
 
