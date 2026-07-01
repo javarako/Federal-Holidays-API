@@ -19,11 +19,25 @@ The API manages holiday records with these fields:
 Supported endpoints:
 
 ```text
-GET  /api/countries/{countryCode}/holidays
-POST /api/countries/{countryCode}/holidays
-PUT  /api/countries/{countryCode}/holidays/{id}
-POST /api/countries/{countryCode}/holidays/upload
+GET  /api/v1/countries/{countryCode}/holidays
+POST /api/v1/countries/{countryCode}/holidays
+PUT  /api/v1/countries/{countryCode}/holidays/{id}
+POST /api/v1/countries/{countryCode}/holidays/upload
 ```
+
+The list endpoint supports optional query parameters:
+
+- `year`: returns holidays whose date falls within that calendar year.
+- `fromDate`: returns holidays on or after this ISO date.
+- `toDate`: returns holidays on or before this ISO date.
+
+Example:
+
+```text
+GET /api/v1/countries/CA/holidays?year=2026
+```
+
+If multiple list filters are provided, all filters are applied together. For example, `fromDate=2026-07-01&toDate=2026-12-31` returns holidays in that inclusive date range. If `year` is combined with `fromDate` or `toDate`, the response must satisfy both the year and date-bound filters.
 
 The upload endpoint accepts a CSV file with `name` and `date` headers. The `description` header is optional. The country always comes from the URL path, not the uploaded file.
 
@@ -59,7 +73,7 @@ The database enforces uniqueness for `country_code`, `holiday_date`, and `name` 
 
 ## Request Flow
 
-For list requests, the controller parses `{countryCode}`, validates that it is supported, and asks the service for holidays ordered by date and name.
+For list requests, the controller parses `{countryCode}`, validates that it is supported, accepts optional `year`, `fromDate`, and `toDate` filters, and asks the service for holidays ordered by date and name.
 
 For add requests, Spring Validation checks the JSON body. The service creates a new `Holiday` for the path country and persists it.
 
@@ -74,6 +88,13 @@ JSON request validation rules:
 - `name` is required and must be at most 160 characters.
 - `date` is required.
 - `description` is optional and must be at most 500 characters.
+
+List query validation rules:
+
+- `year` must be a four-digit integer when present.
+- `fromDate` must use ISO local date format when present.
+- `toDate` must use ISO local date format when present.
+- `fromDate` must be less than or equal to `toDate` when both are present.
 
 CSV import rules:
 
@@ -92,7 +113,7 @@ Errors are returned as `ApiError` JSON with:
 
 Status behavior:
 
-- `400 Bad Request`: unsupported country, validation failure, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
+- `400 Bad Request`: unsupported country, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
 - `404 Not Found`: update target does not exist for the path country.
 - `409 Conflict`: duplicate country/date/name holiday violates the database uniqueness rule.
 
@@ -117,7 +138,7 @@ The test suite covers the intended behavior at focused levels:
 
 - `CountryCodeTest`: supported country parsing and unsupported country rejection.
 - `HolidayServiceTest`: add, list, update, missing holiday handling, and CSV import.
-- `HolidayControllerTest`: endpoint status codes, response JSON, request validation, unsupported country handling, and multipart upload wiring.
+- `HolidayControllerTest`: endpoint status codes, response JSON, request validation, list query parameter handling, unsupported country handling, and multipart upload wiring.
 
 Development verification command:
 
