@@ -15,7 +15,7 @@
 **Files:**
 - Modify: `pom.xml`
 - Create: `src/main/java/com/example/federalholidays/config/OpenApiConfig.java`
-- Test: `src/test/java/com/example/federalholidays/openapi/OpenApiDocumentationTest.java`
+- Test: `src/test/java/com/example/federalholidays/config/OpenApiConfigTest.java`
 
 - [ ] **Step 1: Write a failing MockMvc test**
 
@@ -38,12 +38,12 @@ Expected: PASS.
 ### Task 2: Annotate API Surface And Models
 
 **Files:**
-- Modify: `src/main/java/com/example/federalholidays/holiday/HolidayController.java`
-- Modify: `src/main/java/com/example/federalholidays/holiday/HolidayRequest.java`
-- Modify: `src/main/java/com/example/federalholidays/holiday/HolidayResponse.java`
-- Modify: `src/main/java/com/example/federalholidays/holiday/HolidayImportResponse.java`
-- Modify: `src/main/java/com/example/federalholidays/web/ApiError.java`
-- Modify: `src/test/java/com/example/federalholidays/holiday/HolidayControllerTest.java`
+- Modify: `src/main/java/com/example/federalholidays/rest/HolidayController.java`
+- Modify: `src/main/java/com/example/federalholidays/dto/HolidayRequest.java`
+- Modify: `src/main/java/com/example/federalholidays/dto/HolidayResponse.java`
+- Modify: `src/main/java/com/example/federalholidays/dto/HolidayImportResponse.java`
+- Modify: `src/main/java/com/example/federalholidays/exception/ApiError.java`
+- Modify: `src/test/java/com/example/federalholidays/rest/HolidayControllerTest.java`
 
 - [ ] **Step 1: Update controller tests for `/api/v1`**
 
