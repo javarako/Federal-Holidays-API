@@ -39,7 +39,7 @@ GET /api/v1/countries/CA/holidays?year=2026
 
 If multiple list filters are provided, all filters are applied together. For example, `fromDate=2026-07-01&toDate=2026-12-31` returns holidays in that inclusive date range. If `year` is combined with `fromDate` or `toDate`, the response must satisfy both the year and date-bound filters.
 
-The upload endpoint accepts a CSV file with `name` and `date` headers. The `description` header is optional. The country always comes from the URL path, not the uploaded file.
+The upload endpoint accepts CSV or JSON files. CSV files use `name` and `date` headers, with optional `description`. JSON files use an array of objects with `name`, `date`, and optional `description`. The country always comes from the URL path, not the uploaded file.
 
 The upload response summarizes processing results:
 
@@ -65,7 +65,8 @@ Main components:
 
 - `FederalHolidaysApiApplication`: Spring Boot application entry point.
 - `HolidayController`: REST controller for holiday endpoints.
-- `HolidayService`: business logic for add, update, list, and CSV import operations.
+- `HolidayService`: business logic for add, update, list, and upload import operations.
+- `HolidayFileParser`: parses supported CSV and JSON upload files into holiday import rows.
 - `HolidayRepository`: Spring Data JPA repository for holiday persistence.
 - `Holiday`: JPA entity mapped to the `holidays` table.
 - `CountryCode`: enum that centralizes supported country handling.
@@ -114,13 +115,13 @@ List query validation rules:
 - `toDate` must use ISO local date format when present.
 - `fromDate` must be less than or equal to `toDate` when both are present.
 
-CSV import rules:
+Upload import rules:
 
 - A file must be present and non-empty.
-- The file type must be supported. The supported upload type is CSV, accepted when the content type is `text/csv` or the filename ends with `.csv`.
+- The file type must be supported. Supported upload types are CSV and JSON, accepted by recognized content type or `.csv`/`.json` filename.
 - The file must not exceed 1 MB.
-- The CSV must have a `name` column.
-- The CSV must have a `date` column.
+- The record must provide a `name` value.
+- The record must provide a `date` value.
 - Dates must use ISO local date format.
 - `description` is optional.
 - Each row must pass the same holiday data rules as JSON create/update requests.
@@ -129,6 +130,7 @@ Errors are returned as `ApiError` JSON with:
 
 - `timestamp`
 - `status`
+- `error`
 - `message`
 - `details`
 
@@ -136,7 +138,7 @@ Status behavior:
 
 - `200 OK`: successful list, update, or upload request.
 - `201 Created`: holiday created successfully.
-- `400 Bad Request`: invalid request data, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, invalid CSV dates, or upload file too large.
+- `400 Bad Request`: invalid request data, validation failure, invalid list query parameters, missing upload file, malformed upload content, missing required upload values, invalid upload dates, or upload file too large.
 - `404 Not Found`: unsupported country code or update target does not exist for the path country.
 - `409 Conflict`: duplicate country/date/name holiday violates the database uniqueness rule.
 - `415 Unsupported Media Type`: upload file type is not supported.
@@ -162,7 +164,7 @@ The API container depends on PostgreSQL health checks before startup. Datasource
 The test suite covers the intended behavior at focused levels:
 
 - `CountryCodeTest`: supported country parsing and unsupported country rejection.
-- `HolidayServiceTest`: add, list, update, missing holiday handling, CSV import, row-level upload validation, and upload summary counts.
+- `HolidayServiceTest`: add, filtered list, update, missing holiday handling, CSV/JSON import, row-level upload validation, duplicate handling, unsupported file type handling, and upload summary counts.
 - `HolidayControllerTest`: endpoint status codes, response JSON, request validation, list query parameter handling, unsupported country handling, and multipart upload wiring.
 
 Development verification command:

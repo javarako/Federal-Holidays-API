@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: federal_holidays
+      POSTGRES_USER: holidays
+      POSTGRES_PASSWORD: holidays
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U holidays -d federal_holidays"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/federal_holidays
+      SPRING_DATASOURCE_USERNAME: holidays
+      SPRING_DATASOURCE_PASSWORD: holidays
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:

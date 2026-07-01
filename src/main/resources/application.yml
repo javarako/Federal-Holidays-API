@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: federal-holidays-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/federal_holidays}
+    username: ${SPRING_DATASOURCE_USERNAME:holidays}
+    password: ${SPRING_DATASOURCE_PASSWORD:holidays}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+server:
+  port: ${SERVER_PORT:8080}

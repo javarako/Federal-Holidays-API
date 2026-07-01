@@ -1,0 +1,419 @@
+{
+  "info": {
+    "_postman_id": "db4cb0db-12f3-4a63-8b7e-e786a4b1d57f",
+    "name": "Federal Holidays API",
+    "description": "Postman collection for the Federal Holidays API. Start the app with docker compose up --build, then run these requests against the local API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "countryCode",
+      "value": "CA",
+      "type": "string"
+    },
+    {
+      "key": "holidayId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "year",
+      "value": "2026",
+      "type": "string"
+    },
+    {
+      "key": "fromDate",
+      "value": "2026-01-01",
+      "type": "string"
+    },
+    {
+      "key": "toDate",
+      "value": "2026-12-31",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health and Documentation",
+      "item": [
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs"
+              ]
+            },
+            "description": "Returns the generated OpenAPI 3 JSON document."
+          },
+          "response": []
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui/index.html",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "swagger-ui",
+                "index.html"
+              ]
+            },
+            "description": "Opens Swagger UI in a browser-like Postman tab."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Holidays",
+      "item": [
+        {
+          "name": "Create Holiday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('created or duplicate conflict', function () {",
+                  "  pm.expect([201, 409]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('holidayId', String(body.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Canada Day\",\n  \"date\": \"2026-07-01\",\n  \"description\": \"National day\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays"
+              ]
+            },
+            "description": "Creates a federal holiday for the selected country. If successful, stores the returned id in collection variable holidayId."
+          },
+          "response": []
+        },
+        {
+          "name": "List Holidays",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('list succeeds', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays"
+              ]
+            },
+            "description": "Lists federal holidays for the selected country."
+          },
+          "response": []
+        },
+        {
+          "name": "List Holidays By Year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays?year={{year}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                }
+              ]
+            },
+            "description": "Lists holidays for a country filtered by calendar year."
+          },
+          "response": []
+        },
+        {
+          "name": "List Holidays By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays?fromDate={{fromDate}}&toDate={{toDate}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays"
+              ],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "{{fromDate}}"
+                },
+                {
+                  "key": "toDate",
+                  "value": "{{toDate}}"
+                }
+              ]
+            },
+            "description": "Lists holidays for a country filtered by inclusive date range."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Holiday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('update succeeds or target is missing', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Canada Day\",\n  \"date\": \"2026-07-01\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays/{{holidayId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays",
+                "{{holidayId}}"
+              ]
+            },
+            "description": "Updates an existing holiday by id for the selected country."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Holidays CSV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('upload accepted or duplicates reported', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('upload returns summary', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('totalRecords');",
+                  "  pm.expect(body).to.have.property('successfulRecords');",
+                  "  pm.expect(body).to.have.property('failedRecords');",
+                  "  pm.expect(body).to.have.property('errors');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample-holidays.csv"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays",
+                "upload"
+              ]
+            },
+            "description": "Uploads holidays from sample-holidays.csv. In Postman, choose the file manually if the relative path is not resolved."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Holidays JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('upload returns summary', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('totalRecords');",
+                  "  pm.expect(body).to.have.property('successfulRecords');",
+                  "  pm.expect(body).to.have.property('failedRecords');",
+                  "  pm.expect(body).to.have.property('errors');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample-holidays.json"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/{{countryCode}}/holidays/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "{{countryCode}}",
+                "holidays",
+                "upload"
+              ]
+            },
+            "description": "Uploads holidays from sample-holidays.json. In Postman, choose the file manually if the relative path is not resolved."
+          },
+          "response": []
+        },
+        {
+          "name": "Unsupported Country Example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('unsupported country is rejected', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/countries/MX/holidays",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "countries",
+                "MX",
+                "holidays"
+              ]
+            },
+            "description": "Example request for an unsupported country code."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
