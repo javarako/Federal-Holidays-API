@@ -41,6 +41,22 @@ If multiple list filters are provided, all filters are applied together. For exa
 
 The upload endpoint accepts a CSV file with `name` and `date` headers. The `description` header is optional. The country always comes from the URL path, not the uploaded file.
 
+The upload response summarizes processing results:
+
+```json
+{
+  "totalRecords": 10,
+  "successfulRecords": 9,
+  "failedRecords": 1,
+  "errors": [
+    {
+      "row": 4,
+      "message": "Invalid date format"
+    }
+  ]
+}
+```
+
 ## Architecture
 
 The service is a conventional Spring Boot Maven application using Spring Web, Spring Validation, Spring Data JPA, and PostgreSQL.
@@ -79,7 +95,9 @@ For add requests, Spring Validation checks the JSON body. The service creates a 
 
 For update requests, the service looks up the holiday by both `id` and country. This prevents updating a holiday through the wrong country path. The service updates `name`, `date`, and `description`, but the country remains unchanged.
 
-For upload requests, the service reads the multipart CSV file. Each row is parsed into a holiday for the path country. Required row data is `name` and `date`; `description` is optional.
+For upload requests, the service receives a multipart file, validates the file type and size, parses the file content, validates each holiday record, saves valid records, and returns an upload summary. Each row is parsed into a holiday for the path country. Required row data is `name` and `date`; `description` is optional.
+
+Invalid upload rows are skipped and reported in the `errors` array. Valid rows are still saved when other rows in the same file fail validation.
 
 ## Validation And Errors
 
@@ -99,10 +117,13 @@ List query validation rules:
 CSV import rules:
 
 - A file must be present and non-empty.
+- The file type must be supported. The supported upload type is CSV, accepted when the content type is `text/csv` or the filename ends with `.csv`.
+- The file must not exceed 1 MB.
 - The CSV must have a `name` column.
 - The CSV must have a `date` column.
 - Dates must use ISO local date format.
 - `description` is optional.
+- Each row must pass the same holiday data rules as JSON create/update requests.
 
 Errors are returned as `ApiError` JSON with:
 
@@ -115,7 +136,7 @@ Status behavior:
 
 - `200 OK`: successful list, update, or upload request.
 - `201 Created`: holiday created successfully.
-- `400 Bad Request`: invalid request data, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
+- `400 Bad Request`: invalid request data, validation failure, invalid list query parameters, missing upload file, malformed CSV, missing required CSV values, invalid CSV dates, or upload file too large.
 - `404 Not Found`: unsupported country code or update target does not exist for the path country.
 - `409 Conflict`: duplicate country/date/name holiday violates the database uniqueness rule.
 - `415 Unsupported Media Type`: upload file type is not supported.
@@ -141,7 +162,7 @@ The API container depends on PostgreSQL health checks before startup. Datasource
 The test suite covers the intended behavior at focused levels:
 
 - `CountryCodeTest`: supported country parsing and unsupported country rejection.
-- `HolidayServiceTest`: add, list, update, missing holiday handling, and CSV import.
+- `HolidayServiceTest`: add, list, update, missing holiday handling, CSV import, row-level upload validation, and upload summary counts.
 - `HolidayControllerTest`: endpoint status codes, response JSON, request validation, list query parameter handling, unsupported country handling, and multipart upload wiring.
 
 Development verification command:
