@@ -1,0 +1,138 @@
+# Federal Holidays API Design
+
+## Purpose
+
+Build a RESTful API for managing federal holidays by country. The API supports adding, updating, listing, and bulk uploading holidays. For this assignment, supported countries are Canada and the United States, represented as `CA` and `US`.
+
+The current Spring Boot implementation is the intended target for this design.
+
+## Scope
+
+The API manages holiday records with these fields:
+
+- `id`: server-generated numeric identifier.
+- `countryCode`: supported country code, currently `CA` or `US`.
+- `name`: required holiday name.
+- `date`: required holiday date in ISO format, such as `2026-07-01`.
+- `description`: optional text description.
+
+Supported endpoints:
+
+```text
+GET  /api/countries/{countryCode}/holidays
+POST /api/countries/{countryCode}/holidays
+PUT  /api/countries/{countryCode}/holidays/{id}
+POST /api/countries/{countryCode}/holidays/upload
+```
+
+The upload endpoint accepts a CSV file with `name` and `date` headers. The `description` header is optional. The country always comes from the URL path, not the uploaded file.
+
+## Architecture
+
+The service is a conventional Spring Boot Maven application using Spring Web, Spring Validation, Spring Data JPA, and PostgreSQL.
+
+Main components:
+
+- `FederalHolidaysApiApplication`: Spring Boot application entry point.
+- `HolidayController`: REST controller for holiday endpoints.
+- `HolidayService`: business logic for add, update, list, and CSV import operations.
+- `HolidayRepository`: Spring Data JPA repository for holiday persistence.
+- `Holiday`: JPA entity mapped to the `holidays` table.
+- `CountryCode`: enum that centralizes supported country handling.
+- `GlobalExceptionHandler`: maps domain, validation, import, and persistence errors to JSON API errors.
+
+Country support is intentionally isolated in `CountryCode`. Adding a future country should primarily require adding a new enum value, while the controller and service flow remain unchanged.
+
+## Data Model
+
+The `Holiday` entity stores:
+
+- `id`: primary key.
+- `countryCode`: enum stored as a two-letter string.
+- `name`: required, maximum 160 characters.
+- `holidayDate`: required date column.
+- `description`: optional, maximum 500 characters.
+- `createdAt`: creation timestamp.
+- `updatedAt`: last update timestamp.
+
+The database enforces uniqueness for `country_code`, `holiday_date`, and `name` together. This prevents exact duplicate holiday entries for the same country and date.
+
+## Request Flow
+
+For list requests, the controller parses `{countryCode}`, validates that it is supported, and asks the service for holidays ordered by date and name.
+
+For add requests, Spring Validation checks the JSON body. The service creates a new `Holiday` for the path country and persists it.
+
+For update requests, the service looks up the holiday by both `id` and country. This prevents updating a holiday through the wrong country path. The service updates `name`, `date`, and `description`, but the country remains unchanged.
+
+For upload requests, the service reads the multipart CSV file. Each row is parsed into a holiday for the path country. Required row data is `name` and `date`; `description` is optional.
+
+## Validation And Errors
+
+JSON request validation rules:
+
+- `name` is required and must be at most 160 characters.
+- `date` is required.
+- `description` is optional and must be at most 500 characters.
+
+CSV import rules:
+
+- A file must be present and non-empty.
+- The CSV must have a `name` column.
+- The CSV must have a `date` column.
+- Dates must use ISO local date format.
+- `description` is optional.
+
+Errors are returned as `ApiError` JSON with:
+
+- `timestamp`
+- `status`
+- `message`
+- `details`
+
+Status behavior:
+
+- `400 Bad Request`: unsupported country, validation failure, missing upload file, malformed CSV, missing required CSV values, or invalid CSV dates.
+- `404 Not Found`: update target does not exist for the path country.
+- `409 Conflict`: duplicate country/date/name holiday violates the database uniqueness rule.
+
+## Local Runtime
+
+The reviewer run path is Docker-first:
+
+```bash
+docker compose up --build
+```
+
+Docker Compose starts:
+
+- `postgres`: PostgreSQL 16 with database `federal_holidays`.
+- `api`: Spring Boot application listening on port `8080`.
+
+The API container depends on PostgreSQL health checks before startup. Datasource values are passed through environment variables. Hibernate schema update is enabled for this assignment-sized local service.
+
+## Testing
+
+The test suite covers the intended behavior at focused levels:
+
+- `CountryCodeTest`: supported country parsing and unsupported country rejection.
+- `HolidayServiceTest`: add, list, update, missing holiday handling, and CSV import.
+- `HolidayControllerTest`: endpoint status codes, response JSON, request validation, unsupported country handling, and multipart upload wiring.
+
+Development verification command:
+
+```bash
+mvn test
+```
+
+Packaging verification command:
+
+```bash
+mvn -q -DskipTests package
+```
+
+Docker Compose configuration verification command:
+
+```bash
+docker compose config
+```
